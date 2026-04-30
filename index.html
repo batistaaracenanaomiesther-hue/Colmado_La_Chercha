@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inicio - Colmado La Chercha</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <img src="imagenes/logo.jpg" alt="Logo Colmado La Chercha" width="72" height="72">
+      <span>La Chercha</span>
+    </a>
+    <nav class="site-nav">
+      <a href="index.html" class="activo">Inicio</a>
+      <a href="productos.html">Productos</a>
+      <a href="acerca.html">Acerca</a>
+      <a href="contacto.html">Contacto</a>
+      <button type="button" class="nav-cart" data-open-cart aria-label="Abrir carrito">
+        <span class="nav-cart__icon" aria-hidden="true">🛒</span>
+        <span class="nav-cart__badge is-hidden" data-cart-count>0</span>
+      </button>
+    </nav>
+  </header>
+
+  <section class="hero banner">
+    <div class="hero__inner">
+      <h1>Tu colmado de confianza</h1>
+      <p class="hero__sub">Productos frescos, precios claros y pedidos que puedes gestionar desde nuestro panel.</p>
+      <div class="hero__cta">
+        <a class="btn btn--primary" href="productos.html">Ver productos</a>
+        <a class="btn btn--ghost" href="carrito.html">Ir al carrito</a>
+      </div>
+    </div>
+  </section>
+
+  <main class="page-main">
+    <h2 class="section-title">¿Por qué elegirnos?</h2>
+    <div class="contenido" style="padding-top:0">
+      <div class="cuadro">
+        <h2>Variedad</h2>
+        <p>Desde abarrotes y lácteos hasta víveres y limpieza, todo en un solo lugar.</p>
+      </div>
+      <div class="cuadro">
+        <h2>Pedidos</h2>
+        <p>Arma tu carrito, confirma tu pedido y nosotros lo registramos en el sistema.</p>
+      </div>
+      <div class="cuadro">
+        <h2>Panel admin</h2>
+        <p>Gestión de inventario, pedidos y mensajes desde el dashboard (clave de acceso).</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 Colmado La Chercha — República Dominicana</p>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script src="js/auth-ui.js"></script>
+</body>
+</html>

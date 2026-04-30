@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Productos - Colmado La Chercha</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <img src="imagenes/logo.jpg" alt="Logo Colmado La Chercha" width="72" height="72">
+      <span>La Chercha</span>
+    </a>
+    <nav class="site-nav">
+      <a href="index.html">Inicio</a>
+      <a href="productos.html" class="activo">Productos</a>
+      <a href="acerca.html">Acerca</a>
+      <a href="contacto.html">Contacto</a>
+      <button type="button" class="nav-cart" data-open-cart aria-label="Abrir carrito">
+        <span class="nav-cart__icon" aria-hidden="true">🛒</span>
+        <span class="nav-cart__badge is-hidden" data-cart-count>0</span>
+      </button>
+    </nav>
+  </header>
+
+  <section class="banner">
+    <h1>Catálogo de productos</h1>
+  </section>
+
+  <main class="page-main catalog-shell">
+    <div id="productos-error" class="err-banner" style="display:none"></div>
+    <div id="productos-root"></div>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 Colmado La Chercha — Todos los derechos reservados</p>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script src="js/auth-ui.js"></script>
+  <script src="js/productos.js"></script>
+</body>
+</html>

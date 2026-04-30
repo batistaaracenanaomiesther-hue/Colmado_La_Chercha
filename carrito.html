@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carrito - Colmado La Chercha</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <img src="imagenes/logo.jpg" alt="Logo Colmado La Chercha" width="72" height="72">
+      <span>La Chercha</span>
+    </a>
+    <nav class="site-nav">
+      <a href="index.html">Inicio</a>
+      <a href="productos.html">Productos</a>
+      <a href="acerca.html">Acerca</a>
+      <a href="contacto.html">Contacto</a>
+      <button type="button" class="nav-cart" data-open-cart aria-label="Abrir carrito">
+        <span class="nav-cart__icon" aria-hidden="true">🛒</span>
+        <span class="nav-cart__badge is-hidden" data-cart-count>0</span>
+      </button>
+    </nav>
+  </header>
+
+  <section class="banner">
+    <h1>Tu carrito</h1>
+  </section>
+
+  <main class="page-main">
+    <div class="carrito-layout">
+      <div>
+        <h2 class="section-title" style="margin-top:0">Productos</h2>
+        <div class="carrito-items" id="carrito-lista"></div>
+        <p class="vacio" id="carrito-vacio" hidden>Tu carrito está vacío. Visita <a href="productos.html">productos</a>.</p>
+        <button type="button" class="btn btn--danger" id="vaciar-carrito" style="margin-top:1rem">Vaciar carrito</button>
+      </div>
+
+      <aside class="checkout-card">
+        <h3>Confirmar pedido</h3>
+        <p style="color:var(--muted);font-size:0.9rem;margin:0 0 1rem">Los datos se guardan en la base de datos del colmado.</p>
+        <form id="checkout-form">
+          <label for="customer_name">Nombre</label>
+          <input id="customer_name" name="customer_name" required autocomplete="name" placeholder="Tu nombre">
+
+          <label for="customer_phone">Teléfono</label>
+          <input id="customer_phone" name="customer_phone" required autocomplete="tel" placeholder="809-000-0000">
+
+          <label for="customer_email">Correo (opcional)</label>
+          <input id="customer_email" name="customer_email" type="email" autocomplete="email" placeholder="correo@ejemplo.com">
+
+          <label for="notes">Notas</label>
+          <textarea id="notes" name="notes" rows="3" placeholder="Indicaciones de entrega…"></textarea>
+
+          <div class="total-line">
+            <span>Total</span>
+            <span id="carrito-total">RD$0.00</span>
+          </div>
+
+          <button type="submit" class="btn btn--primary btn--block" id="btn-pedido">Enviar pedido</button>
+        </form>
+        <p style="color:var(--muted);font-size:0.85rem;margin-top:0.6rem">
+          Pedidos mayores a RD$5,000 requieren sesión iniciada.
+        </p>
+        <p id="checkout-msg" style="margin-top:1rem;font-size:0.9rem"></p>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>© 2026 Colmado La Chercha</p>
+  </footer>
+
+  <script src="js/app.js"></script>
+  <script src="js/auth-ui.js"></script>
+  <script>
+    function renderCarrito() {
+      const box = document.getElementById('carrito-lista');
+      const vacio = document.getElementById('carrito-vacio');
+      const totalEl = document.getElementById('carrito-total');
+      const cart = Colmado.getCart();
+      box.innerHTML = '';
+      if (cart.length === 0) {
+        vacio.hidden = false;
+        totalEl.textContent = Colmado.formatMoney(0);
+        return;
+      }
+      vacio.hidden = true;
+      cart.forEach((line) => {
+        const row = document.createElement('div');
+        row.className = 'cart-row';
+        row.innerHTML = `
+          <img class="cart-row__img" src="${line.imagen}" alt="">
+          <div>
+            <p class="cart-row__title"></p>
+            <p class="cart-row__meta">${Colmado.formatMoney(line.precio)} × ${line.cantidad}</p>
+            <div class="qty-control">
+              <button type="button" data-m="${line.product_id}">−</button>
+              <span>${line.cantidad}</span>
+              <button type="button" data-p="${line.product_id}">+</button>
+            </div>
+          </div>
+          <button type="button" class="icon-btn" data-rm="${line.product_id}" title="Quitar">🗑</button>
+        `;
+        row.querySelector('.cart-row__title').textContent = line.nombre;
+        box.appendChild(row);
+      });
+      box.querySelectorAll('[data-p]').forEach((b) => {
+        b.addEventListener('click', () => {
+          Colmado.updateQty(Number(b.getAttribute('data-p')), 1);
+          renderCarrito();
+        });
+      });
+      box.querySelectorAll('[data-m]').forEach((b) => {
+        b.addEventListener('click', () => {
+          Colmado.updateQty(Number(b.getAttribute('data-m')), -1);
+          renderCarrito();
+        });
+      });
+      box.querySelectorAll('[data-rm]').forEach((b) => {
+        b.addEventListener('click', () => {
+          Colmado.removeLine(Number(b.getAttribute('data-rm')));
+          renderCarrito();
+        });
+      });
+      totalEl.textContent = Colmado.formatMoney(Colmado.cartTotal());
+    }
+
+    document.getElementById('vaciar-carrito').addEventListener('click', () => {
+      Colmado.clearCart();
+      Colmado.showToast('Carrito vaciado', 'ok');
+      renderCarrito();
+    });
+
+    document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const cart = Colmado.getCart();
+      if (!cart.length) {
+        Colmado.showToast('Agrega productos primero', 'info');
+        return;
+      }
+      const total = Colmado.cartTotal();
+      if (total > 5000 && !Colmado.getUserToken()) {
+        const msg = document.getElementById('checkout-msg');
+        msg.style.color = 'var(--danger)';
+        msg.textContent = 'Para pedidos mayores a RD$5,000 debes iniciar sesión.';
+        if (window.ColmadoAuth && typeof window.ColmadoAuth.openAuthModal === 'function') {
+          window.ColmadoAuth.openAuthModal(false);
+        } else {
+          Colmado.showToast('Inicia sesión para continuar', 'info');
+        }
+        return;
+      }
+      const msg = document.getElementById('checkout-msg');
+      const btn = document.getElementById('btn-pedido');
+      btn.disabled = true;
+      msg.textContent = '';
+      try {
+        const body = {
+          customer_name: document.getElementById('customer_name').value,
+          customer_phone: document.getElementById('customer_phone').value,
+          customer_email: document.getElementById('customer_email').value,
+          notes: document.getElementById('notes').value,
+          items: cart.map((x) => ({
+            product_id: x.product_id,
+            quantity: x.cantidad,
+          })),
+        };
+        const res = await Colmado.api('/api/orders', { method: 'POST', body: JSON.stringify(body) });
+        msg.style.color = 'var(--accent)';
+        msg.textContent = 'Pedido #' + res.id + ' registrado. Total: ' + Colmado.formatMoney(res.total);
+        Colmado.clearCart();
+        renderCarrito();
+        Colmado.showToast('¡Pedido enviado!', 'ok');
+      } catch (err) {
+        msg.style.color = 'var(--danger)';
+        msg.textContent = err.message || 'Error al enviar';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    function prefillCheckout() {
+      const u = Colmado.getUserProfile();
+      if (!u) return;
+      const n = document.getElementById('customer_name');
+      const ph = document.getElementById('customer_phone');
+      const em = document.getElementById('customer_email');
+      if (n && !n.value) n.value = u.name || '';
+      if (ph && !ph.value && u.phone) ph.value = u.phone;
+      if (em && !em.value && u.email) em.value = u.email;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCarrito();
+      prefillCheckout();
+    });
+    window.addEventListener('colmado:cart', renderCarrito);
+    window.addEventListener('colmado:auth', prefillCheckout);
+  </script>
+</body>
+</html>
