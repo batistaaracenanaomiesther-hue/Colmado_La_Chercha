@@ -1,14 +1,56 @@
+require('dotenv').config();
 const mysql = require('mysql2/promise');
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || '127.0.0.1',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : '',
-  database: process.env.DB_NAME || 'colmado_la_chercha',
-  waitForConnections: true,
-  connectionLimit: 10,
-  charset: 'utf8mb4',
-});
+function normalizeCert(raw) {
+  if (!raw) return '';
+  return String(raw).replace(/\\n/g, '\n').trim();
+}
+
+function parseDbConfig() {
+  const databaseUrl = process.env.DATABASE_URL || process.env.MYSQL_URL || '';
+  const hasUrl = typeof databaseUrl === 'string' && databaseUrl.trim().length > 0;
+  const base = {
+    waitForConnections: true,
+    connectionLimit: Number(process.env.DB_CONNECTION_LIMIT || 10),
+    charset: 'utf8mb4',
+  };
+
+  if (!hasUrl) {
+    const cfg = {
+      ...base,
+      host: process.env.DB_HOST || '127.0.0.1',
+      port: Number(process.env.DB_PORT || 3306),
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD !== undefined ? process.env.DB_PASSWORD : '',
+      database: process.env.DB_NAME || 'colmado_la_chercha',
+    };
+    const sslMode = String(process.env.DB_SSL_MODE || '').toUpperCase();
+    const sslCa = normalizeCert(process.env.DB_SSL_CA);
+    if (sslMode === 'REQUIRED') {
+      cfg.ssl = sslCa ? { ca: sslCa, rejectUnauthorized: true } : { rejectUnauthorized: true };
+    }
+    return cfg;
+  }
+
+  const url = new URL(databaseUrl.trim());
+  const dbName = url.pathname.replace(/^\//, '') || 'defaultdb';
+  const sslMode = String(url.searchParams.get('ssl-mode') || process.env.DB_SSL_MODE || '').toUpperCase();
+  const sslCa = normalizeCert(process.env.DB_SSL_CA);
+  const cfg = {
+    ...base,
+    host: url.hostname,
+    port: Number(url.port || 3306),
+    user: decodeURIComponent(url.username || ''),
+    password: decodeURIComponent(url.password || ''),
+    database: dbName,
+  };
+  if (sslMode === 'REQUIRED') {
+    cfg.ssl = sslCa ? { ca: sslCa, rejectUnauthorized: true } : { rejectUnauthorized: true };
+  }
+  return cfg;
+}
+
+const pool = mysql.createPool(parseDbConfig());
 
 async function initSchema() {
   await pool.query(`
@@ -70,7 +112,6 @@ async function initSchema() {
       CONSTRAINT fk_oi_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
-  /** Tabla de mensajes usada por la web actual */
   await pool.query(`
     CREATE TABLE IF NOT EXISTS mensajes (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -82,15 +123,23 @@ async function initSchema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
   `);
 
-  // Migraciones ligeras para bases ya existentes.
-  await pool.query(`
-    ALTER TABLE users
-    ADD COLUMN IF NOT EXISTS role ENUM('admin','empleado','usuario') NOT NULL DEFAULT 'usuario'
-  `);
-  await pool.query(`
-    ALTER TABLE orders
-    ADD COLUMN IF NOT EXISTS user_id INT NULL
-  `);
+  try {
+    const [rows] = await pool.query("SHOW COLUMNS FROM users LIKE 'role'");
+    if (rows.length === 0) {
+      await pool.query("ALTER TABLE users ADD COLUMN role ENUM('admin','empleado','usuario') NOT NULL DEFAULT 'usuario'");
+    }
+  } catch (err) {
+    console.error('Error adding role column:', err);
+  }
+
+  try {
+    const [rows] = await pool.query("SHOW COLUMNS FROM orders LIKE 'user_id'");
+    if (rows.length === 0) {
+      await pool.query("ALTER TABLE orders ADD COLUMN user_id INT NULL");
+    }
+  } catch (err) {
+    console.error('Error adding user_id column:', err);
+  }
   const [idxRows] = await pool.execute(
     `SELECT COUNT(*) AS n
      FROM information_schema.statistics
