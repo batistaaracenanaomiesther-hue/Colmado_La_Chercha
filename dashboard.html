@@ -4,9 +4,69 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - Colmado La Chercha</title>
+  <title>Dashboard - Colmado La Chercha</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --dash-bg: #050b16;
+      --dash-card: #0f172a;
+      --dash-border: rgba(255, 255, 255, 0.1);
+      --dash-accent: #38bdf8;
+      --dash-text: #f8fafc;
+      --dash-muted: #94a3b8;
+    }
+    body.is-dashboard {
+      background: var(--dash-bg);
+      color: var(--dash-text);
+    }
+    .is-dashboard .site-header {
+      background: rgba(15, 23, 42, 0.8);
+      border-bottom: 1px solid var(--dash-border);
+    }
+    .is-dashboard .dashboard-login {
+      background: var(--dash-card);
+      border-color: var(--dash-border);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+    .is-dashboard .stat-card {
+      background: var(--dash-card);
+      border-color: var(--dash-border);
+    }
+    .is-dashboard .stat-card strong {
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .is-dashboard .dash-section {
+      background: var(--dash-card);
+      padding: 1.25rem;
+      border-radius: 16px;
+      border: 1px solid var(--dash-border);
+      margin-bottom: 2rem;
+    }
+    .is-dashboard table th {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--dash-muted);
+    }
+    .is-dashboard table td {
+      border-color: var(--dash-border);
+    }
+    .is-dashboard input, .is-dashboard select {
+      background: rgba(0,0,0,0.3) !important;
+      border-color: var(--dash-border) !important;
+    }
+    .type-badge {
+      font-size: 0.7rem;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+    .type-badge--user { background: #1e293b; color: #38bdf8; border: 1px solid #38bdf8; }
+    .type-badge--guest { background: #1e293b; color: #94a3b8; border: 1px solid #475569; }
+  </style>
 </head>
-<body>
+<body class="is-dashboard">
   <header class="site-header">
     <a class="brand" href="index.html">
       <img src="imagenes/logo.jpg" alt="" width="56" height="56">
@@ -36,36 +96,50 @@
       <div class="stats-grid" id="stats-grid"></div>
 
       <div class="dash-section">
-        <h2>Pedidos de Invitados (no registrados)</h2>
-        <p style="margin-bottom:0.5rem;color:var(--muted);font-size:0.9rem">Pedidos realizados por clientes sin cuenta.</p>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.6rem;margin-bottom:0.7rem">
-          <input type="text" id="orders-search" placeholder="Buscar por cliente, teléfono o correo">
-          <select id="orders-filter-status">
-            <option value="">Todos los estados</option>
-            <option value="pendiente">pendiente</option>
-            <option value="preparando">preparando</option>
-            <option value="listo">listo</option>
-            <option value="entregado">entregado</option>
-            <option value="cancelado">cancelado</option>
-          </select>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
+          <div>
+            <h2 style="margin:0;font-size:1.25rem">Gestión de Pedidos</h2>
+            <p style="margin:0.2rem 0 0;color:var(--dash-muted);font-size:0.85rem">Pedidos de clientes registrados e invitados.</p>
+          </div>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+            <input type="text" id="orders-search" placeholder="Buscar cliente o teléfono..." style="width:240px;margin:0">
+            <select id="orders-filter-status" style="width:160px;margin:0">
+              <option value="">Todos los estados</option>
+              <option value="pendiente">pendiente</option>
+              <option value="preparando">preparando</option>
+              <option value="listo">listo</option>
+              <option value="entregado">entregado</option>
+              <option value="cancelado">cancelado</option>
+            </select>
+          </div>
         </div>
-        <div class="table-wrap"><table><thead><tr><th>#</th><th>Fecha</th><th>Cliente</th><th>Teléfono</th><th>Usuario</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="orders-body"></tbody></table></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Cliente</th>
+                <th>Teléfono</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="orders-body"></tbody>
+          </table>
+        </div>
       </div>
 
       <div class="dash-section">
-        <h2>Productos (precio y stock)</h2>
-        <div class="table-wrap"><table><thead><tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Activo</th><th></th></tr></thead><tbody id="products-body"></tbody></table></div>
+        <h2>Inventario de Productos</h2>
+        <div class="table-wrap"><table><thead><tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Stock</th><th>Activo</th><th>Acción</th></tr></thead><tbody id="products-body"></tbody></table></div>
       </div>
 
       <div class="dash-section">
-        <h2>Usuarios y actividad de pedidos</h2>
-        <div class="table-wrap"><table><thead><tr><th>ID</th><th>Nombre</th><th>Correo</th><th>Rol</th><th>Pedidos</th><th>Total acumulado</th><th>Último pedido</th><th>Acción</th></tr></thead><tbody id="users-body"></tbody></table></div>
-      </div>
-
-      <div class="dash-section">
-        <h2>Pedidos de Usuarios Registrados</h2>
-        <p style="margin-bottom:0.5rem;color:var(--muted);font-size:0.9rem">Pedidos realizados por usuarios que han iniciado sesión.</p>
-        <div class="table-wrap"><table><thead><tr><th>#</th><th>Fecha</th><th>Cliente</th><th>Teléfono</th><th>Usuario</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="user-orders-body"></tbody></table></div>
+        <h2>Usuarios y actividad</h2>
+        <div class="table-wrap"><table><thead><tr><th>ID</th><th>Nombre</th><th>Correo</th><th>Rol</th><th>Pedidos</th><th>Total</th><th>Último</th><th></th></tr></thead><tbody id="users-body"></tbody></table></div>
       </div>
 
       <div class="dash-section">
@@ -149,42 +223,34 @@
 
     function renderOrders() {
       const allOrders = applyOrdersFilters();
-      
-      // Separar pedidos
-      const guestOrders = allOrders.filter(o => !o.user_id);
-      const userOrders = allOrders.filter(o => o.user_id);
-
-      // Render Guest Orders
       const gob = document.getElementById('orders-body');
-      gob.innerHTML = guestOrders.length ? guestOrders.map(o => renderOrderRow(o)).join('') : '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--muted)">No hay pedidos de invitados</td></tr>';
-
-      // Render Registered User Orders
-      const uob = document.getElementById('user-orders-body');
-      uob.innerHTML = userOrders.length ? userOrders.map(o => renderOrderRow(o)).join('') : '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted)">No hay pedidos de usuarios registrados</td></tr>';
-
-      // Setup events
+      gob.innerHTML = allOrders.length ? allOrders.map(o => renderOrderRow(o)).join('') : '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--dash-muted)">No hay pedidos que coincidan</td></tr>';
       document.querySelectorAll('.order-status').forEach((sel) => sel.addEventListener('change', () => api('/api/orders/' + sel.getAttribute('data-order') + '/status', { method: 'PATCH', body: JSON.stringify({ status: sel.value }) }).then(loadAll).catch((e) => alert(e.message))));
       document.querySelectorAll('.btn-order-detail').forEach((btn) => btn.addEventListener('click', () => openOrderDetail(btn.getAttribute('data-id')).catch((e) => alert(e.message))));
     }
 
     function renderOrderRow(o) {
+      const typeBadge = o.user_id 
+        ? `<span class="type-badge type-badge--user" title="${escapeAttr(o.user_name || o.user_email || 'Usuario')}">Registrado</span>` 
+        : `<span class="type-badge type-badge--guest">Invitado</span>`;
+      
       return `<tr>
         <td>${o.id}</td>
         <td>${escapeHtml(o.created_at || '')}</td>
+        <td>${typeBadge}</td>
         <td>${escapeHtml(o.customer_name || '')}</td>
         <td>${escapeHtml(o.customer_phone || '')}</td>
-        <td>${o.user_id ? `<span class="badge" style="background:#e3f2fd;color:#1565c0;border:1px solid #bbdefb">${escapeHtml(o.user_name || o.user_email || 'Usuario')}</span>` : '<span style="color:var(--muted)">Invitado</span>'}</td>
         <td>${fmtMoney(o.total)}</td>
         <td><span class="badge ${badgeClass(o.status)}">${escapeHtml(o.status || '')}</span></td>
         <td><div style="display:flex;gap:0.4rem;align-items:center">
-          <select data-order="${o.id}" class="order-status" style="margin:0">
+          <select data-order="${o.id}" class="order-status" style="margin:0;padding:0.2rem">
             <option value="pendiente" ${o.status === 'pendiente' ? 'selected' : ''}>pendiente</option>
             <option value="preparando" ${o.status === 'preparando' ? 'selected' : ''}>preparando</option>
             <option value="listo" ${o.status === 'listo' ? 'selected' : ''}>listo</option>
             <option value="entregado" ${o.status === 'entregado' ? 'selected' : ''}>entregado</option>
             <option value="cancelado" ${o.status === 'cancelado' ? 'selected' : ''}>cancelado</option>
           </select>
-          <button type="button" class="btn btn--ghost btn-order-detail" data-id="${o.id}" style="padding:0.3rem 0.5rem">Ver</button>
+          <button type="button" class="btn btn--ghost btn-order-detail" data-id="${o.id}" style="padding:0.3rem 0.5rem;font-size:0.8rem">Ver</button>
         </div></td>
       </tr>`;
     }
