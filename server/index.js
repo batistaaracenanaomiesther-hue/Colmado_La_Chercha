@@ -63,9 +63,13 @@ function adminAuth(req, res, next) {
   const u = String(req.headers['x-admin-user'] || '').trim();
   const p = String(req.headers['x-admin-password'] || '');
   const k = req.headers['x-admin-key'];
-  if (u === ADMIN_USER && p === ADMIN_PASSWORD) return next();
-  if (k === ADMIN_KEY) return next();
-  return res.status(401).json({ error: 'No autorizado' });
+  
+  if ((u === ADMIN_USER && p === ADMIN_PASSWORD) || k === ADMIN_KEY) {
+    return next();
+  }
+  
+  console.log(`[AdminAuth] Intento fallido. Usuario: ${u}, Password: ${p ? '****' : 'vacío'}, Key: ${k ? 'presente' : 'ausente'}`);
+  return res.status(401).json({ error: 'Credenciales de administrador inválidas' });
 }
 
 app.get('/api/health', (req, res) => {
@@ -381,12 +385,13 @@ app.get('/api/orders', adminAuth, async (req, res) => {
        LIMIT ?`,
       [limit]
     );
+    console.log(`[API] Se recuperaron ${rows.length} pedidos.`);
     res.json(rows);
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Error' });
+    console.error('[API Error] Error en /api/orders:', e);
+    res.status(500).json({ error: 'Error al obtener pedidos de la base de datos' });
   }
-});
+}
 
 app.patch('/api/users/:id/role', adminAuth, async (req, res) => {
   const id = Number(req.params.id);
