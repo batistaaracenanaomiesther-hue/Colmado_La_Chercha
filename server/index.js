@@ -391,7 +391,7 @@ app.get('/api/orders', adminAuth, async (req, res) => {
     console.error('[API Error] Error en /api/orders:', e);
     res.status(500).json({ error: 'Error al obtener pedidos de la base de datos' });
   }
-}
+});
 
 app.patch('/api/users/:id/role', adminAuth, async (req, res) => {
   const id = Number(req.params.id);
