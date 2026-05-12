@@ -125,6 +125,28 @@
       });
     }
 
+    function applyOrdersFilters() {
+      const q = (document.getElementById('orders-search').value || '').trim().toLowerCase();
+      const st = document.getElementById('orders-filter-status').value;
+      return ordersCache.filter((o) => (!q || `${o.customer_name || ''} ${o.customer_phone || ''} ${o.customer_email || ''}`.toLowerCase().includes(q)) && (!st || o.status === st));
+    }
+
+    function closeOrderModal() { 
+      const modal = document.getElementById('order-modal'); 
+      modal.classList.remove('is-open'); 
+      modal.style.display = 'none'; 
+    }
+
+    async function openOrderDetail(orderId) {
+      const detail = await api('/api/orders/' + orderId);
+      document.getElementById('order-modal-id').textContent = '#' + detail.id;
+      document.getElementById('order-modal-meta').textContent = `${detail.created_at || ''} | ${detail.customer_name || ''} | ${detail.customer_phone || ''} | ${fmtMoney(detail.total)}`;
+      document.getElementById('order-modal-items').innerHTML = (detail.items || []).map((it) => `<tr><td>${escapeHtml(it.product_name || '')}</td><td>${Number(it.quantity || 0)}</td><td>${fmtMoney(it.unit_price)}</td><td>${fmtMoney(Number(it.unit_price || 0) * Number(it.quantity || 0))}</td></tr>`).join('');
+      const modal = document.getElementById('order-modal'); 
+      modal.style.display = 'flex'; 
+      modal.classList.add('is-open');
+    }
+
     function renderOrders() {
       const allOrders = applyOrdersFilters();
       
